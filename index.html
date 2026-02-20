@@ -107,292 +107,200 @@ button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
 </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
+
+const supabaseUrl = "sb_publishable__MlbqPKxA98ED0uheBLgsw_N0y6KYio"
+const supabaseKey = "https://huqdqwtpxolinyzqxdai.supabase.co"
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey)
+
 const App = {
 
-state:{
-ramais: [],
-messages: [],
-products: [],
-actives: [],
-editType:null,
-editIndex:null
-},
-
-init(){
+async init(){
 this.bindTabs();
 this.bindTheme();
 this.bindAddButtons();
 this.bindDelegation();
-this.renderAll();
+await this.loadAll();
 },
 
-saveToServer(type,data){
-fetch("http://localhost:8080/save/"+type,{
-method:"POST",
-headers:{ "Content-Type":"application/json"},
-body:JSON.stringify(data)
-});
+async loadAll(){
+await this.loadRamais();
+await this.loadMessages();
+await this.loadProducts();
+await this.loadActives();
 },
 
-renderAll(){
-this.renderRamais();
-this.renderMessages();
-this.renderProducts();
-this.renderActives();
+/* ================= LOAD ================= */
+
+async loadRamais(){
+const { data } = await supabaseClient.from("ramais").select("*")
+this.renderRamais(data || [])
+},
+
+async loadMessages(){
+const { data } = await supabaseClient.from("mensagens").select("*")
+this.renderMessages(data || [])
+},
+
+async loadProducts(){
+const { data } = await supabaseClient.from("produtos").select("*")
+this.renderProducts(data || [])
+},
+
+async loadActives(){
+const { data } = await supabaseClient.from("ativos").select("*")
+this.renderActives(data || [])
+},
+
+/* ================= ADD ================= */
+
+bindAddButtons(){
+
+addRamal.onclick=async ()=>{
+if(ramalSetor.value && ramalNumero.value){
+await supabaseClient.from("ramais").insert({
+setor:ramalSetor.value,
+numero:ramalNumero.value
+})
+ramalSetor.value=""
+ramalNumero.value=""
+this.loadRamais()
+}
+};
+
+addMessage.onclick=async ()=>{
+if(messageText.value){
+await supabaseClient.from("mensagens").insert({
+texto:messageText.value
+})
+messageText.value=""
+this.loadMessages()
+}
+};
+
+addProduct.onclick=async ()=>{
+if(productName.value && productActives.value && productPosology.value){
+await supabaseClient.from("produtos").insert({
+name:productName.value,
+actives:productActives.value,
+posology:productPosology.value
+})
+productName.value=""
+productActives.value=""
+productPosology.value=""
+this.loadProducts()
+}
+};
+
+addActive.onclick=async ()=>{
+if(activeName.value && activeDescription.value){
+await supabaseClient.from("ativos").insert({
+name:activeName.value,
+description:activeDescription.value
+})
+activeName.value=""
+activeDescription.value=""
+this.loadActives()
+}
+};
+
 },
 
 /* ================= RENDER ================= */
 
-renderRamais(){
+renderRamais(data){
 const list=document.getElementById("ramalList");
 list.innerHTML="";
-this.state.ramais.forEach((r,i)=>{
+data.forEach(item=>{
 list.innerHTML+=`
 <div class="card">
-<strong>${r.setor}</strong> - ${r.numero}
+<strong>${item.setor}</strong> - ${item.numero}
 <div class="actions">
-<button data-edit="ramal-${i}">Editar</button>
-<button class="danger" data-delete="ramal-${i}">Excluir</button>
+<button data-delete="ramal-${item.id}">Excluir</button>
 </div>
 </div>`;
 });
 },
 
-renderMessages(){
+renderMessages(data){
 const list=document.getElementById("messageList");
 list.innerHTML="";
-this.state.messages.forEach((m,i)=>{
+data.forEach(item=>{
 list.innerHTML+=`
 <div class="card">
-${m}
+${item.texto}
 <div class="actions">
-<button data-edit="msg-${i}">Editar</button>
-<button class="danger" data-delete="msg-${i}">Excluir</button>
+<button data-delete="msg-${item.id}">Excluir</button>
 </div>
 </div>`;
 });
 },
 
-renderProducts(){
+renderProducts(data){
 const list=document.getElementById("productList");
 list.innerHTML="";
-this.state.products.forEach((p,i)=>{
+data.forEach(item=>{
 list.innerHTML+=`
 <div class="card">
-<strong>${p.name}</strong>
-<div>${p.actives}</div>
-<div>${p.posology}</div>
+<strong>${item.name}</strong>
+<div>${item.actives}</div>
+<div>${item.posology}</div>
 <div class="actions">
-<button data-edit="prod-${i}">Editar</button>
-<button class="danger" data-delete="prod-${i}">Excluir</button>
+<button data-delete="prod-${item.id}">Excluir</button>
 </div>
 </div>`;
 });
 },
 
-renderActives(){
+renderActives(data){
 const list=document.getElementById("activeList");
 list.innerHTML="";
-this.state.actives.forEach((a,i)=>{
+data.forEach(item=>{
 list.innerHTML+=`
 <div class="card">
-<strong>${a.name}</strong>
-<div>${a.description}</div>
+<strong>${item.name}</strong>
+<div>${item.description}</div>
 <div class="actions">
-<button data-edit="active-${i}">Editar</button>
-<button class="danger" data-delete="active-${i}">Excluir</button>
+<button data-delete="active-${item.id}">Excluir</button>
 </div>
 </div>`;
 });
-},
-
-/* ================= ADICIONAR ================= */
-
-bindAddButtons(){
-
-addRamal.onclick=()=>{
-if(ramalSetor.value && ramalNumero.value){
-const obj={
-setor:ramalSetor.value,
-numero:ramalNumero.value
-};
-this.state.ramais.push(obj);
-this.renderRamais();
-this.saveToServer("ramais",this.state.ramais);
-ramalSetor.value="";
-ramalNumero.value="";
-}
-};
-
-addMessage.onclick=()=>{
-if(messageText.value){
-this.state.messages.push(messageText.value);
-this.renderMessages();
-this.saveToServer("mensagens",this.state.messages);
-messageText.value="";
-}
-};
-
-addProduct.onclick=()=>{
-if(productName.value && productActives.value && productPosology.value){
-const obj={
-name:productName.value,
-actives:productActives.value,
-posology:productPosology.value
-};
-this.state.products.push(obj);
-this.renderProducts();
-this.saveToServer("produtos",this.state.products);
-productName.value="";
-productActives.value="";
-productPosology.value="";
-}
-};
-
-addActive.onclick=()=>{
-if(activeName.value && activeDescription.value){
-const obj={
-name:activeName.value,
-description:activeDescription.value
-};
-this.state.actives.push(obj);
-this.renderActives();
-this.saveToServer("ativos",this.state.actives);
-activeName.value="";
-activeDescription.value="";
-}
-};
-
-},
-
-/* ================= MODAL ================= */
-
-openModal(type,index){
-this.state.editType=type;
-this.state.editIndex=index;
-
-const fields=document.getElementById("modalFields");
-fields.innerHTML="";
-
-if(type==="ramal"){
-const item=this.state.ramais[index];
-fields.innerHTML=`
-<input id="editSetor" value="${item.setor}">
-<input id="editNumero" value="${item.numero}">
-`;
-}
-
-if(type==="msg"){
-fields.innerHTML=`
-<textarea id="editMsg">${this.state.messages[index]}</textarea>
-`;
-}
-
-if(type==="prod"){
-const item=this.state.products[index];
-fields.innerHTML=`
-<input id="editName" value="${item.name}">
-<input id="editActives" value="${item.actives}">
-<input id="editPosology" value="${item.posology}">
-`;
-}
-
-if(type==="active"){
-const item=this.state.actives[index];
-fields.innerHTML=`
-<input id="editActiveName" value="${item.name}">
-<input id="editActiveDesc" value="${item.description}">
-`;
-}
-
-editModal.style.display="flex";
-},
-
-saveEdit(){
-const type=this.state.editType;
-const i=this.state.editIndex;
-
-if(type==="ramal"){
-this.state.ramais[i]={setor:editSetor.value,numero:editNumero.value};
-this.renderRamais();
-this.saveToServer("ramais",this.state.ramais);
-}
-
-if(type==="msg"){
-this.state.messages[i]=editMsg.value;
-this.renderMessages();
-this.saveToServer("mensagens",this.state.messages);
-}
-
-if(type==="prod"){
-this.state.products[i]={
-name:editName.value,
-actives:editActives.value,
-posology:editPosology.value
-};
-this.renderProducts();
-this.saveToServer("produtos",this.state.products);
-}
-
-if(type==="active"){
-this.state.actives[i]={
-name:editActiveName.value,
-description:editActiveDesc.value
-};
-this.renderActives();
-this.saveToServer("ativos",this.state.actives);
-}
-
-editModal.style.display="none";
 },
 
 /* ================= DELETE ================= */
 
 bindDelegation(){
-document.addEventListener("click",(e)=>{
-
-if(e.target.dataset.edit){
-const [type,index]=e.target.dataset.edit.split("-");
-this.openModal(type,index);
-}
+document.addEventListener("click",async (e)=>{
 
 if(e.target.dataset.delete){
-const [type,index]=e.target.dataset.delete.split("-");
-const i = parseInt(index);
+const [type,id]=e.target.dataset.delete.split("-")
 
 if(type==="ramal"){
-this.state.ramais.splice(i,1);
-this.renderRamais();
-this.saveToServer("ramais",this.state.ramais);
+await supabaseClient.from("ramais").delete().eq("id",id)
+this.loadRamais()
 }
 
 if(type==="msg"){
-this.state.messages.splice(i,1);
-this.renderMessages();
-this.saveToServer("mensagens",this.state.messages);
+await supabaseClient.from("mensagens").delete().eq("id",id)
+this.loadMessages()
 }
 
 if(type==="prod"){
-this.state.products.splice(i,1);
-this.renderProducts();
-this.saveToServer("produtos",this.state.products);
+await supabaseClient.from("produtos").delete().eq("id",id)
+this.loadProducts()
 }
 
 if(type==="active"){
-this.state.actives.splice(i,1);
-this.renderActives();
-this.saveToServer("ativos",this.state.actives);
+await supabaseClient.from("ativos").delete().eq("id",id)
+this.loadActives()
 }
 
 }
 
 });
-
-saveEdit.onclick=()=>this.saveEdit();
-closeModal.onclick=()=>editModal.style.display="none";
 },
-/* ================= TABS ================= */
 
 bindTabs(){
 document.querySelectorAll(".tab-btn").forEach(btn=>{
@@ -405,8 +313,6 @@ document.getElementById(btn.dataset.tab).classList.add("active");
 });
 },
 
-/* ================= THEME ================= */
-
 bindTheme(){
 themeToggle.onclick=()=>{
 const html=document.documentElement;
@@ -418,8 +324,8 @@ html.setAttribute("data-theme",dark?"light":"dark");
 };
 
 App.init();
-</script>
 
+</script>
 
 </body>
 </html>
