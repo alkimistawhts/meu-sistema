@@ -264,19 +264,34 @@ this.loadAll()
 }
 },
 
-openDelete(table,id){
-modalTitle.innerText="Confirmar Exclusão"
-modalContent.innerHTML="<p>Deseja realmente excluir?</p>"
-modal.style.display="flex"
+openDelete(table, id) {
 
-currentAction=async ()=>{
-const { error } = await supabaseClient.from(table).delete().eq("id",id)
-if(error){
-alert(error.message)
-return
-}
-modal.style.display="none"
-this.loadAll()
+  const numericId = Number(id)
+
+  if (!numericId) {
+    alert("ID inválido")
+    return
+  }
+
+  modalTitle.innerText = "Confirmar Exclusão"
+  modalContent.innerHTML = "<p>Deseja realmente excluir?</p>"
+  modal.style.display = "flex"
+
+  currentAction = async () => {
+
+    const { error } = await supabaseClient
+      .from(table)
+      .delete()
+      .eq("id", numericId)
+
+    if (error) {
+      alert(error.message)
+      return
+    }
+
+    modal.style.display = "none"
+    this.loadAll()
+  }
 }
 },
 
@@ -298,3 +313,4 @@ App.init()
 </script>
 </body>
 </html>
+
