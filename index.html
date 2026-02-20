@@ -6,7 +6,6 @@
 <title>Sistema Premium</title>
 
 <style>
-/* ===== SEU CSS ORIGINAL (INALTERADO) ===== */
 :root{
 --bg:#f1f5f9;
 --card:#ffffff;
@@ -14,7 +13,6 @@
 --border:#e2e8f0;
 --primary:#2563eb;
 --danger:#ef4444;
---transition:.25s;
 }
 
 [data-theme="dark"]{
@@ -26,7 +24,7 @@
 --danger:#f87171;
 }
 
-*{box-sizing:border-box;transition:.2s}
+*{box-sizing:border-box}
 body{margin:0;padding:20px;font-family:Segoe UI;background:var(--bg);color:var(--text);}
 .container{max-width:1000px;margin:auto;background:var(--card);padding:20px;border-radius:12px;border:1px solid var(--border);}
 h1{text-align:center}
@@ -41,17 +39,25 @@ button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
 .danger{background:var(--danger);color:white}
 .card{border:1px solid var(--border);padding:10px;border-radius:8px;margin-bottom:8px;}
 .actions{display:flex;gap:6px;margin-top:6px;}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;}
-.modal-box{background:var(--card);padding:20px;border-radius:10px;width:320px;}
-.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px;}
 .theme-toggle{float:right;cursor:pointer;}
+#loginBox{max-width:400px;margin:100px auto;}
+.hidden{display:none}
 </style>
 </head>
 <body>
 
-<div class="container">
+<div id="loginBox" class="container">
+<h2>Login</h2>
+<input type="email" id="email" placeholder="Email">
+<input type="password" id="senha" placeholder="Senha">
+<button class="primary" id="btnLogin">Entrar</button>
+</div>
+
+<div id="app" class="container hidden">
 
 <button class="theme-toggle" id="themeToggle">🌙</button>
+<button style="float:left" id="logoutBtn">Sair</button>
+
 <h1>Sistema Premium</h1>
 
 <div class="tabs">
@@ -61,7 +67,6 @@ button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
 <button class="tab-btn" data-tab="ativos">Ativos</button>
 </div>
 
-<!-- RAMAIS -->
 <div id="ramais" class="tab-content active">
 <input id="ramalSetor" placeholder="Setor">
 <input id="ramalNumero" placeholder="Ramal">
@@ -69,14 +74,12 @@ button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
 <div id="ramalList"></div>
 </div>
 
-<!-- MENSAGENS -->
 <div id="mensagens" class="tab-content">
 <textarea id="messageText" placeholder="Mensagem"></textarea>
 <button class="primary" id="addMessage">Adicionar</button>
 <div id="messageList"></div>
 </div>
 
-<!-- PRODUTOS -->
 <div id="produtos" class="tab-content">
 <input id="productName" placeholder="Nome">
 <input id="productActives" placeholder="Ativos">
@@ -85,7 +88,6 @@ button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
 <div id="productList"></div>
 </div>
 
-<!-- ATIVOS (NOVO) -->
 <div id="ativos" class="tab-content">
 <input id="activeName" placeholder="Nome do Ativo">
 <input id="activeDescription" placeholder="Descrição">
@@ -95,44 +97,72 @@ button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
 
 </div>
 
-<!-- MODAL GLOBAL -->
-<div class="modal" id="editModal">
-<div class="modal-box">
-<h3>Editar</h3>
-<div id="modalFields"></div>
-<div class="modal-actions">
-<button class="primary" id="saveEdit">Salvar</button>
-<button id="closeModal">Cancelar</button>
-</div>
-</div>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
 
-const supabaseUrl = "sb_publishable__MlbqPKxA98ED0uheBLgsw_N0y6KYio"
-const supabaseKey = "https://huqdqwtpxolinyzqxdai.supabase.co"
+// ⚠️ COLOQUE SEUS DADOS CORRETOS AQUI
+const supabaseUrl = "https://huqdqwtpxolinyzqxdai.supabase.co"
+const supabaseKey = "sb_publishable__MlbqPKxA98ED0uheBLgsw_N0y6KYio"
+
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey)
+
+// ===== LOGIN =====
+
+btnLogin.onclick = async () => {
+const { error } = await supabaseClient.auth.signInWithPassword({
+email: email.value,
+password: senha.value
+})
+
+if(error){
+alert(error.message)
+}else{
+checkUser()
+}
+}
+
+// ===== LOGOUT =====
+
+logoutBtn.onclick = async () => {
+await supabaseClient.auth.signOut()
+location.reload()
+}
+
+// ===== VERIFICA SESSÃO =====
+
+async function checkUser(){
+const { data } = await supabaseClient.auth.getSession()
+if(data.session){
+loginBox.classList.add("hidden")
+app.classList.remove("hidden")
+App.init()
+}else{
+loginBox.classList.remove("hidden")
+app.classList.add("hidden")
+}
+}
+
+checkUser()
+
+// ===== APP =====
 
 const App = {
 
 async init(){
-this.bindTabs();
-this.bindTheme();
-this.bindAddButtons();
-this.bindDelegation();
-await this.loadAll();
+this.bindTabs()
+this.bindTheme()
+this.bindAddButtons()
+this.bindDelegation()
+await this.loadAll()
 },
 
 async loadAll(){
-await this.loadRamais();
-await this.loadMessages();
-await this.loadProducts();
-await this.loadActives();
+await this.loadRamais()
+await this.loadMessages()
+await this.loadProducts()
+await this.loadActives()
 },
-
-/* ================= LOAD ================= */
 
 async loadRamais(){
 const { data } = await supabaseClient.from("ramais").select("*")
@@ -153,8 +183,6 @@ async loadActives(){
 const { data } = await supabaseClient.from("ativos").select("*")
 this.renderActives(data || [])
 },
-
-/* ================= ADD ================= */
 
 bindAddButtons(){
 
@@ -208,41 +236,36 @@ this.loadActives()
 
 },
 
-/* ================= RENDER ================= */
-
 renderRamais(data){
-const list=document.getElementById("ramalList");
-list.innerHTML="";
+ramalList.innerHTML=""
 data.forEach(item=>{
-list.innerHTML+=`
+ramalList.innerHTML+=`
 <div class="card">
 <strong>${item.setor}</strong> - ${item.numero}
 <div class="actions">
 <button data-delete="ramal-${item.id}">Excluir</button>
 </div>
-</div>`;
-});
+</div>`
+})
 },
 
 renderMessages(data){
-const list=document.getElementById("messageList");
-list.innerHTML="";
+messageList.innerHTML=""
 data.forEach(item=>{
-list.innerHTML+=`
+messageList.innerHTML+=`
 <div class="card">
 ${item.texto}
 <div class="actions">
 <button data-delete="msg-${item.id}">Excluir</button>
 </div>
-</div>`;
-});
+</div>`
+})
 },
 
 renderProducts(data){
-const list=document.getElementById("productList");
-list.innerHTML="";
+productList.innerHTML=""
 data.forEach(item=>{
-list.innerHTML+=`
+productList.innerHTML+=`
 <div class="card">
 <strong>${item.name}</strong>
 <div>${item.actives}</div>
@@ -250,26 +273,23 @@ list.innerHTML+=`
 <div class="actions">
 <button data-delete="prod-${item.id}">Excluir</button>
 </div>
-</div>`;
-});
+</div>`
+})
 },
 
 renderActives(data){
-const list=document.getElementById("activeList");
-list.innerHTML="";
+activeList.innerHTML=""
 data.forEach(item=>{
-list.innerHTML+=`
+activeList.innerHTML+=`
 <div class="card">
 <strong>${item.name}</strong>
 <div>${item.description}</div>
 <div class="actions">
 <button data-delete="active-${item.id}">Excluir</button>
 </div>
-</div>`;
-});
+</div>`
+})
 },
-
-/* ================= DELETE ================= */
 
 bindDelegation(){
 document.addEventListener("click",async (e)=>{
@@ -296,34 +316,30 @@ if(type==="active"){
 await supabaseClient.from("ativos").delete().eq("id",id)
 this.loadActives()
 }
-
 }
-
-});
+})
 },
 
 bindTabs(){
 document.querySelectorAll(".tab-btn").forEach(btn=>{
 btn.onclick=()=>{
-document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
-document.querySelectorAll(".tab-content").forEach(c=>c.classList.remove("active"));
-btn.classList.add("active");
-document.getElementById(btn.dataset.tab).classList.add("active");
-};
-});
+document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"))
+document.querySelectorAll(".tab-content").forEach(c=>c.classList.remove("active"))
+btn.classList.add("active")
+document.getElementById(btn.dataset.tab).classList.add("active")
+}
+})
 },
 
 bindTheme(){
 themeToggle.onclick=()=>{
-const html=document.documentElement;
-const dark=html.getAttribute("data-theme")==="dark";
-html.setAttribute("data-theme",dark?"light":"dark");
-};
+const html=document.documentElement
+const dark=html.getAttribute("data-theme")==="dark"
+html.setAttribute("data-theme",dark?"light":"dark")
+}
 }
 
-};
-
-App.init();
+}
 
 </script>
 
