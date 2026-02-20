@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema Premium</title>
+
+<style>
+/* ===== SEU CSS ORIGINAL (INALTERADO) ===== */
+:root{
+--bg:#f1f5f9;
+--card:#ffffff;
+--text:#0f172a;
+--border:#e2e8f0;
+--primary:#2563eb;
+--danger:#ef4444;
+--transition:.25s;
+}
+
+[data-theme="dark"]{
+--bg:#0f172a;
+--card:#1e293b;
+--text:#f1f5f9;
+--border:#334155;
+--primary:#3b82f6;
+--danger:#f87171;
+}
+
+*{box-sizing:border-box;transition:.2s}
+body{margin:0;padding:20px;font-family:Segoe UI;background:var(--bg);color:var(--text);}
+.container{max-width:1000px;margin:auto;background:var(--card);padding:20px;border-radius:12px;border:1px solid var(--border);}
+h1{text-align:center}
+.tabs{display:flex;gap:10px;margin-bottom:20px;}
+.tab-btn{flex:1;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--card);cursor:pointer;}
+.tab-btn.active{background:var(--primary);color:white;}
+.tab-content{display:none}
+.tab-content.active{display:block}
+input, textarea{width:100%;padding:8px;margin-bottom:8px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);}
+button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
+.primary{background:var(--primary);color:white}
+.danger{background:var(--danger);color:white}
+.card{border:1px solid var(--border);padding:10px;border-radius:8px;margin-bottom:8px;}
+.actions{display:flex;gap:6px;margin-top:6px;}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;}
+.modal-box{background:var(--card);padding:20px;border-radius:10px;width:320px;}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px;}
+.theme-toggle{float:right;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<button class="theme-toggle" id="themeToggle">🌙</button>
+<h1>Sistema Premium</h1>
+
+<div class="tabs">
+<button class="tab-btn active" data-tab="ramais">Ramais</button>
+<button class="tab-btn" data-tab="mensagens">Mensagens</button>
+<button class="tab-btn" data-tab="produtos">Produtos</button>
+<button class="tab-btn" data-tab="ativos">Ativos</button>
+</div>
+
+<!-- RAMAIS -->
+<div id="ramais" class="tab-content active">
+<input id="ramalSetor" placeholder="Setor">
+<input id="ramalNumero" placeholder="Ramal">
+<button class="primary" id="addRamal">Adicionar</button>
+<div id="ramalList"></div>
+</div>
+
+<!-- MENSAGENS -->
+<div id="mensagens" class="tab-content">
+<textarea id="messageText" placeholder="Mensagem"></textarea>
+<button class="primary" id="addMessage">Adicionar</button>
+<div id="messageList"></div>
+</div>
+
+<!-- PRODUTOS -->
+<div id="produtos" class="tab-content">
+<input id="productName" placeholder="Nome">
+<input id="productActives" placeholder="Ativos">
+<input id="productPosology" placeholder="Posologia">
+<button class="primary" id="addProduct">Adicionar</button>
+<div id="productList"></div>
+</div>
+
+<!-- ATIVOS (NOVO) -->
+<div id="ativos" class="tab-content">
+<input id="activeName" placeholder="Nome do Ativo">
+<input id="activeDescription" placeholder="Descrição">
+<button class="primary" id="addActive">Adicionar</button>
+<div id="activeList"></div>
+</div>
+
+</div>
+
+<!-- MODAL GLOBAL -->
+<div class="modal" id="editModal">
+<div class="modal-box">
+<h3>Editar</h3>
+<div id="modalFields"></div>
+<div class="modal-actions">
+<button class="primary" id="saveEdit">Salvar</button>
+<button id="closeModal">Cancelar</button>
+</div>
+</div>
+</div>
+
+<script>
+const App = {
+
+state:{
+ramais: [],
+messages: [],
+products: [],
+actives: [],
+editType:null,
+editIndex:null
+},
+
+init(){
+this.bindTabs();
+this.bindTheme();
+this.bindAddButtons();
+this.bindDelegation();
+this.renderAll();
+},
+
+saveToServer(type,data){
+fetch("http://localhost:8080/save/"+type,{
+method:"POST",
+headers:{ "Content-Type":"application/json"},
+body:JSON.stringify(data)
+});
+},
+
+renderAll(){
+this.renderRamais();
+this.renderMessages();
+this.renderProducts();
+this.renderActives();
+},
+
+/* ================= RENDER ================= */
+
+renderRamais(){
+const list=document.getElementById("ramalList");
+list.innerHTML="";
+this.state.ramais.forEach((r,i)=>{
+list.innerHTML+=`
+<div class="card">
+<strong>${r.setor}</strong> - ${r.numero}
+<div class="actions">
+<button data-edit="ramal-${i}">Editar</button>
+<button class="danger" data-delete="ramal-${i}">Excluir</button>
+</div>
+</div>`;
+});
+},
+
+renderMessages(){
+const list=document.getElementById("messageList");
+list.innerHTML="";
+this.state.messages.forEach((m,i)=>{
+list.innerHTML+=`
+<div class="card">
+${m}
+<div class="actions">
+<button data-edit="msg-${i}">Editar</button>
+<button class="danger" data-delete="msg-${i}">Excluir</button>
+</div>
+</div>`;
+});
+},
+
+renderProducts(){
+const list=document.getElementById("productList");
+list.innerHTML="";
+this.state.products.forEach((p,i)=>{
+list.innerHTML+=`
+<div class="card">
+<strong>${p.name}</strong>
+<div>${p.actives}</div>
+<div>${p.posology}</div>
+<div class="actions">
+<button data-edit="prod-${i}">Editar</button>
+<button class="danger" data-delete="prod-${i}">Excluir</button>
+</div>
+</div>`;
+});
+},
+
+renderActives(){
+const list=document.getElementById("activeList");
+list.innerHTML="";
+this.state.actives.forEach((a,i)=>{
+list.innerHTML+=`
+<div class="card">
+<strong>${a.name}</strong>
+<div>${a.description}</div>
+<div class="actions">
+<button data-edit="active-${i}">Editar</button>
+<button class="danger" data-delete="active-${i}">Excluir</button>
+</div>
+</div>`;
+});
+},
+
+/* ================= ADICIONAR ================= */
+
+bindAddButtons(){
+
+addRamal.onclick=()=>{
+if(ramalSetor.value && ramalNumero.value){
+const obj={
+setor:ramalSetor.value,
+numero:ramalNumero.value
+};
+this.state.ramais.push(obj);
+this.renderRamais();
+this.saveToServer("ramais",this.state.ramais);
+ramalSetor.value="";
+ramalNumero.value="";
+}
+};
+
+addMessage.onclick=()=>{
+if(messageText.value){
+this.state.messages.push(messageText.value);
+this.renderMessages();
+this.saveToServer("mensagens",this.state.messages);
+messageText.value="";
+}
+};
+
+addProduct.onclick=()=>{
+if(productName.value && productActives.value && productPosology.value){
+const obj={
+name:productName.value,
+actives:productActives.value,
+posology:productPosology.value
+};
+this.state.products.push(obj);
+this.renderProducts();
+this.saveToServer("produtos",this.state.products);
+productName.value="";
+productActives.value="";
+productPosology.value="";
+}
+};
+
+addActive.onclick=()=>{
+if(activeName.value && activeDescription.value){
+const obj={
+name:activeName.value,
+description:activeDescription.value
+};
+this.state.actives.push(obj);
+this.renderActives();
+this.saveToServer("ativos",this.state.actives);
+activeName.value="";
+activeDescription.value="";
+}
+};
+
+},
+
+/* ================= MODAL ================= */
+
+openModal(type,index){
+this.state.editType=type;
+this.state.editIndex=index;
+
+const fields=document.getElementById("modalFields");
+fields.innerHTML="";
+
+if(type==="ramal"){
+const item=this.state.ramais[index];
+fields.innerHTML=`
+<input id="editSetor" value="${item.setor}">
+<input id="editNumero" value="${item.numero}">
+`;
+}
+
+if(type==="msg"){
+fields.innerHTML=`
+<textarea id="editMsg">${this.state.messages[index]}</textarea>
+`;
+}
+
+if(type==="prod"){
+const item=this.state.products[index];
+fields.innerHTML=`
+<input id="editName" value="${item.name}">
+<input id="editActives" value="${item.actives}">
+<input id="editPosology" value="${item.posology}">
+`;
+}
+
+if(type==="active"){
+const item=this.state.actives[index];
+fields.innerHTML=`
+<input id="editActiveName" value="${item.name}">
+<input id="editActiveDesc" value="${item.description}">
+`;
+}
+
+editModal.style.display="flex";
+},
+
+saveEdit(){
+const type=this.state.editType;
+const i=this.state.editIndex;
+
+if(type==="ramal"){
+this.state.ramais[i]={setor:editSetor.value,numero:editNumero.value};
+this.renderRamais();
+this.saveToServer("ramais",this.state.ramais);
+}
+
+if(type==="msg"){
+this.state.messages[i]=editMsg.value;
+this.renderMessages();
+this.saveToServer("mensagens",this.state.messages);
+}
+
+if(type==="prod"){
+this.state.products[i]={
+name:editName.value,
+actives:editActives.value,
+posology:editPosology.value
+};
+this.renderProducts();
+this.saveToServer("produtos",this.state.products);
+}
+
+if(type==="active"){
+this.state.actives[i]={
+name:editActiveName.value,
+description:editActiveDesc.value
+};
+this.renderActives();
+this.saveToServer("ativos",this.state.actives);
+}
+
+editModal.style.display="none";
+},
+
+/* ================= DELETE ================= */
+
+bindDelegation(){
+document.addEventListener("click",(e)=>{
+
+if(e.target.dataset.edit){
+const [type,index]=e.target.dataset.edit.split("-");
+this.openModal(type,index);
+}
+
+if(e.target.dataset.delete){
+const [type,index]=e.target.dataset.delete.split("-");
+const i = parseInt(index);
+
+if(type==="ramal"){
+this.state.ramais.splice(i,1);
+this.renderRamais();
+this.saveToServer("ramais",this.state.ramais);
+}
+
+if(type==="msg"){
+this.state.messages.splice(i,1);
+this.renderMessages();
+this.saveToServer("mensagens",this.state.messages);
+}
+
+if(type==="prod"){
+this.state.products.splice(i,1);
+this.renderProducts();
+this.saveToServer("produtos",this.state.products);
+}
+
+if(type==="active"){
+this.state.actives.splice(i,1);
+this.renderActives();
+this.saveToServer("ativos",this.state.actives);
+}
+
+}
+
+});
+
+saveEdit.onclick=()=>this.saveEdit();
+closeModal.onclick=()=>editModal.style.display="none";
+},
+/* ================= TABS ================= */
+
+bindTabs(){
+document.querySelectorAll(".tab-btn").forEach(btn=>{
+btn.onclick=()=>{
+document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+document.querySelectorAll(".tab-content").forEach(c=>c.classList.remove("active"));
+btn.classList.add("active");
+document.getElementById(btn.dataset.tab).classList.add("active");
+};
+});
+},
+
+/* ================= THEME ================= */
+
+bindTheme(){
+themeToggle.onclick=()=>{
+const html=document.documentElement;
+const dark=html.getAttribute("data-theme")==="dark";
+html.setAttribute("data-theme",dark?"light":"dark");
+};
+}
+
+};
+
+App.init();
+</script>
+
+
+</body>
+</html>
