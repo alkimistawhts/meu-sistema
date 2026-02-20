@@ -39,24 +39,15 @@ button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
 .danger{background:var(--danger);color:white}
 .card{border:1px solid var(--border);padding:10px;border-radius:8px;margin-bottom:8px;}
 .actions{display:flex;gap:6px;margin-top:6px;}
-.theme-toggle{float:right;cursor:pointer;}
-#loginBox{max-width:400px;margin:100px auto;}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;}
+.modal-box{background:var(--card);padding:20px;border-radius:10px;width:320px;}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px;}
 .hidden{display:none}
 </style>
 </head>
 <body>
 
-<div id="loginBox" class="container">
-<h2>Login</h2>
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="senha" placeholder="Senha">
-<button class="primary" id="btnLogin">Entrar</button>
-</div>
-
-<div id="app" class="container hidden">
-
-<button class="theme-toggle" id="themeToggle">🌙</button>
-<button style="float:left" id="logoutBtn">Sair</button>
+<div class="container">
 
 <h1>Sistema Premium</h1>
 
@@ -97,153 +88,74 @@ button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
 
 </div>
 
+<!-- MODAL -->
+<div class="modal" id="modal">
+<div class="modal-box">
+<h3 id="modalTitle"></h3>
+<div id="modalContent"></div>
+<div class="modal-actions">
+<button class="primary" id="modalConfirm">Confirmar</button>
+<button id="modalCancel">Cancelar</button>
+</div>
+</div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
 
-// ⚠️ COLOQUE SEUS DADOS CORRETOS AQUI
-const supabaseUrl = "https://huqdqwtpxolinyzqxdai.supabase.co"
-const supabaseKey = "sb_publishable__MlbqPKxA98ED0uheBLgsw_N0y6KYio"
-
+const supabaseUrl = "https://SEU_PROJETO.supabase.co"
+const supabaseKey = "SUA_ANON_KEY"
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey)
 
-// ===== LOGIN =====
-
-btnLogin.onclick = async () => {
-const { error } = await supabaseClient.auth.signInWithPassword({
-email: email.value,
-password: senha.value
-})
-
-if(error){
-alert(error.message)
-}else{
-checkUser()
-}
-}
-
-// ===== LOGOUT =====
-
-logoutBtn.onclick = async () => {
-await supabaseClient.auth.signOut()
-location.reload()
-}
-
-// ===== VERIFICA SESSÃO =====
-
-async function checkUser(){
-const { data } = await supabaseClient.auth.getSession()
-if(data.session){
-loginBox.classList.add("hidden")
-app.classList.remove("hidden")
-App.init()
-}else{
-loginBox.classList.remove("hidden")
-app.classList.add("hidden")
-}
-}
-
-checkUser()
-
-// ===== APP =====
+let currentAction = null
 
 const App = {
 
 async init(){
 this.bindTabs()
-this.bindTheme()
-this.bindAddButtons()
+this.bindAdd()
 this.bindDelegation()
 await this.loadAll()
 },
 
 async loadAll(){
-await this.loadRamais()
-await this.loadMessages()
-await this.loadProducts()
-await this.loadActives()
+await this.load("ramais","ramalList",this.renderRamais)
+await this.load("mensagens","messageList",this.renderMessages)
+await this.load("produtos","productList",this.renderProducts)
+await this.load("ativos","activeList",this.renderActives)
 },
 
-async loadRamais(){
-const { data } = await supabaseClient.from("ramais").select("*")
-this.renderRamais(data || [])
+async load(table,list,render){
+const { data,error } = await supabaseClient.from(table).select("*")
+if(error) alert(error.message)
+render(data||[])
 },
 
-async loadMessages(){
-const { data } = await supabaseClient.from("mensagens").select("*")
-this.renderMessages(data || [])
+bindAdd(){
+
+addRamal.onclick=()=>this.insert("ramais",{setor:ramalSetor.value,numero:ramalNumero.value},()=>this.loadAll())
+addMessage.onclick=()=>this.insert("mensagens",{texto:messageText.value},()=>this.loadAll())
+addProduct.onclick=()=>this.insert("produtos",{name:productName.value,actives:productActives.value,posology:productPosology.value},()=>this.loadAll())
+addActive.onclick=()=>this.insert("ativos",{name:activeName.value,description:activeDescription.value},()=>this.loadAll())
+
 },
 
-async loadProducts(){
-const { data } = await supabaseClient.from("produtos").select("*")
-this.renderProducts(data || [])
-},
-
-async loadActives(){
-const { data } = await supabaseClient.from("ativos").select("*")
-this.renderActives(data || [])
-},
-
-bindAddButtons(){
-
-addRamal.onclick=async ()=>{
-if(ramalSetor.value && ramalNumero.value){
-await supabaseClient.from("ramais").insert({
-setor:ramalSetor.value,
-numero:ramalNumero.value
-})
-ramalSetor.value=""
-ramalNumero.value=""
-this.loadRamais()
-}
-};
-
-addMessage.onclick=async ()=>{
-if(messageText.value){
-await supabaseClient.from("mensagens").insert({
-texto:messageText.value
-})
-messageText.value=""
-this.loadMessages()
-}
-};
-
-addProduct.onclick=async ()=>{
-if(productName.value && productActives.value && productPosology.value){
-await supabaseClient.from("produtos").insert({
-name:productName.value,
-actives:productActives.value,
-posology:productPosology.value
-})
-productName.value=""
-productActives.value=""
-productPosology.value=""
-this.loadProducts()
-}
-};
-
-addActive.onclick=async ()=>{
-if(activeName.value && activeDescription.value){
-await supabaseClient.from("ativos").insert({
-name:activeName.value,
-description:activeDescription.value
-})
-activeName.value=""
-activeDescription.value=""
-this.loadActives()
-}
-};
-
+async insert(table,data,callback){
+const { error } = await supabaseClient.from(table).insert(data)
+if(error) alert(error.message)
+else callback()
 },
 
 renderRamais(data){
 ramalList.innerHTML=""
-data.forEach(item=>{
+data.forEach(i=>{
 ramalList.innerHTML+=`
 <div class="card">
-<strong>${item.setor}</strong> - ${item.numero}
+<strong>${i.setor}</strong> - ${i.numero}
 <div class="actions">
-<button data-delete="ramal-${item.id}">Excluir</button>
+<button data-edit="ramais-${i.id}">Editar</button>
+<button class="danger" data-delete="ramais-${i.id}">Excluir</button>
 </div>
 </div>`
 })
@@ -251,12 +163,13 @@ ramalList.innerHTML+=`
 
 renderMessages(data){
 messageList.innerHTML=""
-data.forEach(item=>{
+data.forEach(i=>{
 messageList.innerHTML+=`
 <div class="card">
-${item.texto}
+${i.texto}
 <div class="actions">
-<button data-delete="msg-${item.id}">Excluir</button>
+<button data-edit="mensagens-${i.id}">Editar</button>
+<button class="danger" data-delete="mensagens-${i.id}">Excluir</button>
 </div>
 </div>`
 })
@@ -264,14 +177,15 @@ ${item.texto}
 
 renderProducts(data){
 productList.innerHTML=""
-data.forEach(item=>{
+data.forEach(i=>{
 productList.innerHTML+=`
 <div class="card">
-<strong>${item.name}</strong>
-<div>${item.actives}</div>
-<div>${item.posology}</div>
+<strong>${i.name}</strong>
+<div>${i.actives}</div>
+<div>${i.posology}</div>
 <div class="actions">
-<button data-delete="prod-${item.id}">Excluir</button>
+<button data-edit="produtos-${i.id}">Editar</button>
+<button class="danger" data-delete="produtos-${i.id}">Excluir</button>
 </div>
 </div>`
 })
@@ -279,45 +193,72 @@ productList.innerHTML+=`
 
 renderActives(data){
 activeList.innerHTML=""
-data.forEach(item=>{
+data.forEach(i=>{
 activeList.innerHTML+=`
 <div class="card">
-<strong>${item.name}</strong>
-<div>${item.description}</div>
+<strong>${i.name}</strong>
+<div>${i.description}</div>
 <div class="actions">
-<button data-delete="active-${item.id}">Excluir</button>
+<button data-edit="ativos-${i.id}">Editar</button>
+<button class="danger" data-delete="ativos-${i.id}">Excluir</button>
 </div>
 </div>`
 })
 },
 
 bindDelegation(){
-document.addEventListener("click",async (e)=>{
+document.addEventListener("click",async e=>{
+
+if(e.target.dataset.edit){
+const [table,id]=e.target.dataset.edit.split("-")
+this.openEdit(table,id)
+}
 
 if(e.target.dataset.delete){
-const [type,id]=e.target.dataset.delete.split("-")
-
-if(type==="ramal"){
-await supabaseClient.from("ramais").delete().eq("id",id)
-this.loadRamais()
+const [table,id]=e.target.dataset.delete.split("-")
+this.openDelete(table,id)
 }
 
-if(type==="msg"){
-await supabaseClient.from("mensagens").delete().eq("id",id)
-this.loadMessages()
-}
+})
+},
 
-if(type==="prod"){
-await supabaseClient.from("produtos").delete().eq("id",id)
-this.loadProducts()
-}
+async openEdit(table,id){
+const { data } = await supabaseClient.from(table).select("*").eq("id",id).single()
 
-if(type==="active"){
-await supabaseClient.from("ativos").delete().eq("id",id)
-this.loadActives()
-}
+modalTitle.innerText="Editar"
+modalContent.innerHTML=""
+
+Object.keys(data).forEach(key=>{
+if(key!=="id"){
+modalContent.innerHTML+=`<input id="edit_${key}" value="${data[key]}">`
 }
 })
+
+modal.style.display="flex"
+
+currentAction=async ()=>{
+let update={}
+Object.keys(data).forEach(key=>{
+if(key!=="id"){
+update[key]=document.getElementById("edit_"+key).value
+}
+})
+await supabaseClient.from(table).update(update).eq("id",id)
+modal.style.display="none"
+this.loadAll()
+}
+},
+
+openDelete(table,id){
+modalTitle.innerText="Confirmar Exclusão"
+modalContent.innerHTML="<p>Deseja realmente excluir?</p>"
+modal.style.display="flex"
+
+currentAction=async ()=>{
+await supabaseClient.from(table).delete().eq("id",id)
+modal.style.display="none"
+this.loadAll()
+}
 },
 
 bindTabs(){
@@ -329,17 +270,14 @@ btn.classList.add("active")
 document.getElementById(btn.dataset.tab).classList.add("active")
 }
 })
-},
-
-bindTheme(){
-themeToggle.onclick=()=>{
-const html=document.documentElement
-const dark=html.getAttribute("data-theme")==="dark"
-html.setAttribute("data-theme",dark?"light":"dark")
-}
 }
 
 }
+
+modalConfirm.onclick=()=>currentAction && currentAction()
+modalCancel.onclick=()=>modal.style.display="none"
+
+App.init()
 
 </script>
 
