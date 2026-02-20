@@ -42,7 +42,6 @@ button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;}
 .modal-box{background:var(--card);padding:20px;border-radius:10px;width:320px;}
 .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px;}
-.hidden{display:none}
 </style>
 </head>
 <body>
@@ -108,7 +107,22 @@ const supabaseUrl = "https://huqdqwtpxolinyzqxdai.supabase.co"
 const supabaseKey = "sb_publishable__MlbqPKxA98ED0uheBLgsw_N0y6KYio"
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey)
 
+const modal = document.getElementById("modal")
+const modalTitle = document.getElementById("modalTitle")
+const modalContent = document.getElementById("modalContent")
+const modalConfirm = document.getElementById("modalConfirm")
+const modalCancel = document.getElementById("modalCancel")
+
 let currentAction = null
+
+modalCancel.onclick = () => {
+modal.style.display = "none"
+currentAction = null
+}
+
+modalConfirm.onclick = async () => {
+if(currentAction) await currentAction()
+}
 
 const App = {
 
@@ -133,12 +147,10 @@ render(data||[])
 },
 
 bindAdd(){
-
 addRamal.onclick=()=>this.insert("ramais",{setor:ramalSetor.value,numero:ramalNumero.value},()=>this.loadAll())
 addMessage.onclick=()=>this.insert("mensagens",{texto:messageText.value},()=>this.loadAll())
 addProduct.onclick=()=>this.insert("produtos",{name:productName.value,actives:productActives.value,posology:productPosology.value},()=>this.loadAll())
 addActive.onclick=()=>this.insert("ativos",{name:activeName.value,description:activeDescription.value},()=>this.loadAll())
-
 },
 
 async insert(table,data,callback){
@@ -207,15 +219,18 @@ activeList.innerHTML+=`
 },
 
 bindDelegation(){
-document.addEventListener("click",async e=>{
+document.addEventListener("click",(e)=>{
 
-if(e.target.dataset.edit){
-const [table,id]=e.target.dataset.edit.split("-")
+const editBtn = e.target.closest("[data-edit]")
+const deleteBtn = e.target.closest("[data-delete]")
+
+if(editBtn){
+const [table,id]=editBtn.dataset.edit.split("-")
 this.openEdit(table,id)
 }
 
-if(e.target.dataset.delete){
-const [table,id]=e.target.dataset.delete.split("-")
+if(deleteBtn){
+const [table,id]=deleteBtn.dataset.delete.split("-")
 this.openDelete(table,id)
 }
 
@@ -255,7 +270,11 @@ modalContent.innerHTML="<p>Deseja realmente excluir?</p>"
 modal.style.display="flex"
 
 currentAction=async ()=>{
-await supabaseClient.from(table).delete().eq("id",id)
+const { error } = await supabaseClient.from(table).delete().eq("id",id)
+if(error){
+alert(error.message)
+return
+}
 modal.style.display="none"
 this.loadAll()
 }
@@ -274,13 +293,8 @@ document.getElementById(btn.dataset.tab).classList.add("active")
 
 }
 
-modalConfirm.onclick=()=>currentAction && currentAction()
-modalCancel.onclick=()=>modal.style.display="none"
-
 App.init()
 
 </script>
-
 </body>
 </html>
-
