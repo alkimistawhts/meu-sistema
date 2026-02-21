@@ -180,11 +180,11 @@ await this.loadAll()
 },
 
 async loadAll(){
-await this.load("ramais","ramalList",this.renderRamais)
-await this.load("mensagens","messageList",this.renderMessages)
-await this.load("produtos","productList",this.renderProducts)
-await this.load("ativos","activeList",this.renderActives)
-},
+  await this.load("ramais","ramalList",(data)=>this.renderRamais(data))
+  await this.load("mensagens","messageList",(data)=>this.renderMessages(data))
+  await this.load("produtos","productList",(data)=>this.renderProducts(data))
+  await this.load("ativos","activeList",(data)=>this.renderActives(data))
+}
 
 async load(table,listId,render){
 const { data,error } = await supabaseClient.from(table).select("*")
@@ -244,12 +244,15 @@ renderRamais(data){
   const list = document.getElementById("ramalList")
   list.innerHTML=""
 
-  data.forEach(i=>{
-    if(!i.id) return
+  if(!data || data.length === 0){
+    list.innerHTML = "<p>Nenhum ramal cadastrado.</p>"
+    return
+  }
 
+  data.forEach(i=>{
     list.innerHTML += `
       <div class="card">
-        <strong>${i.setor}</strong> - ${i.numero}
+        <strong>${i.setor || ""}</strong> - ${i.numero || ""}
         <div class="actions">
           <button data-edit="ramais-${i.id}">Editar</button>
           <button class="danger" data-delete="ramais-${i.id}">Excluir</button>
@@ -409,6 +412,7 @@ App.init()
 </script>
 </body>
 </html>
+
 
 
 
