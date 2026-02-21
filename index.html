@@ -46,7 +46,14 @@ button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
 </head>
 <body>
 
-<div class="container">
+<div id="authBox" class="container" style="max-width:400px;">
+  <h2>Login</h2>
+  <input id="loginEmail" placeholder="Email">
+  <input id="loginPassword" type="password" placeholder="Senha">
+  <button class="primary" id="btnLogin">Entrar</button>
+</div>
+  
+<div class="container" id="appContainer" style="display:none;">
 
 <h1>Sistema Premium</h1>
 
@@ -124,6 +131,45 @@ modalConfirm.onclick = async () => {
 if(currentAction) await currentAction()
 }
 
+const authBox = document.getElementById("authBox")
+const appContainer = document.getElementById("appContainer")
+
+// Verifica sessão ao carregar
+supabaseClient.auth.getSession().then(({ data }) => {
+  if (data.session) {
+    showApp()
+  } else {
+    showLogin()
+  }
+})
+
+// Login
+document.getElementById("btnLogin").onclick = async () => {
+  const email = document.getElementById("loginEmail").value
+  const password = document.getElementById("loginPassword").value
+
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  })
+
+  if (error) {
+    alert(error.message)
+  } else {
+    showApp()
+  }
+}
+
+function showApp() {
+  authBox.style.display = "none"
+  appContainer.style.display = "block"
+}
+
+function showLogin() {
+  authBox.style.display = "block"
+  appContainer.style.display = "none"
+}
+  
 const App = {
 
 async init(){
@@ -363,6 +409,7 @@ App.init()
 </script>
 </body>
 </html>
+
 
 
 
