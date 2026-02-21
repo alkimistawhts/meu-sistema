@@ -150,10 +150,38 @@ render(data || [])
 },
 
 bindAdd(){
-addRamal.onclick=()=>this.insert("ramais",{setor:ramalSetor.value,numero:ramalNumero.value})
-addMessage.onclick=()=>this.insert("mensagens",{texto:messageText.value})
-addProduct.onclick=()=>this.insert("produtos",{name:productName.value,actives:productActives.value,posology:productPosology.value})
-addActive.onclick=()=>this.insert("ativos",{name:activeName.value,description:activeDescription.value})
+
+  document.getElementById("addRamal").onclick = () => {
+    const setor = document.getElementById("ramalSetor").value
+    const numero = document.getElementById("ramalNumero").value
+
+    if(!setor || !numero){
+      alert("Preencha todos os campos")
+      return
+    }
+
+    this.insert("ramais", { setor, numero })
+  }
+
+  document.getElementById("addMessage").onclick = () => {
+    const texto = document.getElementById("messageText").value
+    if(!texto) return
+    this.insert("mensagens",{ texto })
+  }
+
+  document.getElementById("addProduct").onclick = () => {
+    const name = document.getElementById("productName").value
+    const actives = document.getElementById("productActives").value
+    const posology = document.getElementById("productPosology").value
+    this.insert("produtos",{ name, actives, posology })
+  }
+
+  document.getElementById("addActive").onclick = () => {
+    const name = document.getElementById("activeName").value
+    const description = document.getElementById("activeDescription").value
+    this.insert("ativos",{ name, description })
+  }
+
 },
 
 async insert(table,data){
@@ -315,3 +343,4 @@ App.init()
 </script>
 </body>
 </html>
+
