@@ -195,66 +195,82 @@ async insert(table,data){
 },
 
 renderRamais(data){
-document.getElementById("ramalList").innerHTML=""
-data.forEach(i=>{
-if(!i.id) return
-document.getElementById("ramalList").innerHTML += ...
-<div class="card">
-<strong>${i.setor}</strong> - ${i.numero}
-<div class="actions">
-<button data-edit="ramais-${i.id}">Editar</button>
-<button class="danger" data-delete="ramais-${i.id}">Excluir</button>
-</div>
-</div>`
-})
+  const list = document.getElementById("ramalList")
+  list.innerHTML=""
+
+  data.forEach(i=>{
+    if(!i.id) return
+
+    list.innerHTML += `
+      <div class="card">
+        <strong>${i.setor}</strong> - ${i.numero}
+        <div class="actions">
+          <button data-edit="ramais-${i.id}">Editar</button>
+          <button class="danger" data-delete="ramais-${i.id}">Excluir</button>
+        </div>
+      </div>
+    `
+  })
 },
 
 renderMessages(data){
-document.getElementById("messageList").innerHTML=""
-data.forEach(i=>{
-if(!i.id) return
-document.getElementById("messageList").innerHTML += ...
-<div class="card">
-${i.texto}
-<div class="actions">
-<button data-edit="mensagens-${i.id}">Editar</button>
-<button class="danger" data-delete="mensagens-${i.id}">Excluir</button>
-</div>
-</div>`
-})
+  const list = document.getElementById("messageList")
+  list.innerHTML=""
+
+  data.forEach(i=>{
+    if(!i.id) return
+
+    list.innerHTML += `
+      <div class="card">
+        ${i.texto}
+        <div class="actions">
+          <button data-edit="mensagens-${i.id}">Editar</button>
+          <button class="danger" data-delete="mensagens-${i.id}">Excluir</button>
+        </div>
+      </div>
+    `
+  })
 },
 
 renderProducts(data){
-document.getElementById("productList").innerHTML=""
-data.forEach(i=>{
-if(!i.id) return
-document.getElementById("productList").innerHTML += ...
-<div class="card">
-<strong>${i.name}</strong>
-<div>${i.actives}</div>
-<div>${i.posology}</div>
-<div class="actions">
-<button data-edit="produtos-${i.id}">Editar</button>
-<button class="danger" data-delete="produtos-${i.id}">Excluir</button>
-</div>
-</div>`
-})
+  const list = document.getElementById("productList")
+  list.innerHTML=""
+
+  data.forEach(i=>{
+    if(!i.id) return
+
+    list.innerHTML += `
+      <div class="card">
+        <strong>${i.name}</strong>
+        <div>${i.actives}</div>
+        <div>${i.posology}</div>
+        <div class="actions">
+          <button data-edit="produtos-${i.id}">Editar</button>
+          <button class="danger" data-delete="produtos-${i.id}">Excluir</button>
+        </div>
+      </div>
+    `
+  })
 },
 
 renderActives(data){
-document.getElementById("activeList").innerHTML=""
-data.forEach(i=>{
-if(!i.id) return
-document.getElementById("activeList").innerHTML += ...
-<div class="card">
-<strong>${i.name}</strong>
-<div>${i.description}</div>
-<div class="actions">
-<button data-edit="ativos-${i.id}">Editar</button>
-<button class="danger" data-delete="ativos-${i.id}">Excluir</button>
-</div>
-</div>`
-})
+  const list = document.getElementById("activeList")
+  list.innerHTML=""
+
+  data.forEach(i=>{
+    if(!i.id) return
+
+    list.innerHTML += `
+      <div class="card">
+        <strong>${i.name}</strong>
+        <div>${i.description}</div>
+        <div class="actions">
+          <button data-edit="ativos-${i.id}">Editar</button>
+          <button class="danger" data-delete="ativos-${i.id}">Excluir</button>
+        </div>
+      </div>
+    `
+  })
 },
 
 bindDelegation(){
@@ -347,5 +363,6 @@ App.init()
 </script>
 </body>
 </html>
+
 
 
