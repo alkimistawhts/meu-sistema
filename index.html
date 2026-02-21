@@ -131,23 +131,32 @@ modalConfirm.onclick = async () => {
 if(currentAction) await currentAction()
 }
 
+// ================= AUTH =================
+
 const authBox = document.getElementById("authBox")
 const appContainer = document.getElementById("appContainer")
+const btnLogin = document.getElementById("btnLogin")
 
-// Verifica sessão ao carregar
-supabaseClient.auth.getSession().then(async ({ data }) => {
-  if (data.session) {
+async function checkSession() {
+  const { data: { session } } = await supabaseClient.auth.getSession()
+
+  if (session) {
     showApp()
     await App.init()
   } else {
     showLogin()
   }
-})
+}
 
-// Login
-document.getElementById("btnLogin").onclick = async () => {
-  const email = document.getElementById("loginEmail").value
-  const password = document.getElementById("loginPassword").value
+btnLogin.addEventListener("click", async () => {
+
+  const email = document.getElementById("loginEmail").value.trim()
+  const password = document.getElementById("loginPassword").value.trim()
+
+  if (!email || !password) {
+    alert("Preencha email e senha")
+    return
+  }
 
   const { error } = await supabaseClient.auth.signInWithPassword({
     email,
@@ -157,10 +166,9 @@ document.getElementById("btnLogin").onclick = async () => {
   if (error) {
     alert(error.message)
   } else {
-    showApp()
-    await App.init()   // 🔥 INICIA AQUI
+    await checkSession()
   }
-}
+})
 
 function showApp() {
   authBox.style.display = "none"
@@ -171,6 +179,9 @@ function showLogin() {
   authBox.style.display = "block"
   appContainer.style.display = "none"
 }
+
+// executa verificação ao carregar
+checkSession()
   
 const App = {
 
@@ -412,6 +423,7 @@ document.getElementById(btn.dataset.tab).classList.add("active")
 </script>
 </body>
 </html>
+
 
 
 
