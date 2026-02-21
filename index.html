@@ -140,28 +140,32 @@ await this.load("produtos","productList",this.renderProducts)
 await this.load("ativos","activeList",this.renderActives)
 },
 
-async load(table,list,render){
+async load(table,listId,render){
 const { data,error } = await supabaseClient.from(table).select("*")
-if(error) alert(error.message)
-render(data||[])
+if(error){
+alert(error.message)
+return
+}
+render(data || [])
 },
 
 bindAdd(){
-addRamal.onclick=()=>this.insert("ramais",{setor:ramalSetor.value,numero:ramalNumero.value},()=>this.loadAll())
-addMessage.onclick=()=>this.insert("mensagens",{texto:messageText.value},()=>this.loadAll())
-addProduct.onclick=()=>this.insert("produtos",{name:productName.value,actives:productActives.value,posology:productPosology.value},()=>this.loadAll())
-addActive.onclick=()=>this.insert("ativos",{name:activeName.value,description:activeDescription.value},()=>this.loadAll())
+addRamal.onclick=()=>this.insert("ramais",{setor:ramalSetor.value,numero:ramalNumero.value})
+addMessage.onclick=()=>this.insert("mensagens",{texto:messageText.value})
+addProduct.onclick=()=>this.insert("produtos",{name:productName.value,actives:productActives.value,posology:productPosology.value})
+addActive.onclick=()=>this.insert("ativos",{name:activeName.value,description:activeDescription.value})
 },
 
-async insert(table,data,callback){
+async insert(table,data){
 const { error } = await supabaseClient.from(table).insert(data)
 if(error) alert(error.message)
-else callback()
+else this.loadAll()
 },
 
 renderRamais(data){
 ramalList.innerHTML=""
 data.forEach(i=>{
+if(!i.id) return
 ramalList.innerHTML+=`
 <div class="card">
 <strong>${i.setor}</strong> - ${i.numero}
@@ -176,6 +180,7 @@ ramalList.innerHTML+=`
 renderMessages(data){
 messageList.innerHTML=""
 data.forEach(i=>{
+if(!i.id) return
 messageList.innerHTML+=`
 <div class="card">
 ${i.texto}
@@ -190,6 +195,7 @@ ${i.texto}
 renderProducts(data){
 productList.innerHTML=""
 data.forEach(i=>{
+if(!i.id) return
 productList.innerHTML+=`
 <div class="card">
 <strong>${i.name}</strong>
@@ -206,6 +212,7 @@ productList.innerHTML+=`
 renderActives(data){
 activeList.innerHTML=""
 data.forEach(i=>{
+if(!i.id) return
 activeList.innerHTML+=`
 <div class="card">
 <strong>${i.name}</strong>
@@ -238,18 +245,24 @@ this.openDelete(table,id)
 },
 
 async openEdit(table,id){
-const { data } = await supabaseClient
-  .from(table)
-  .select("id,setor,numero")
-  .eq("id", Number(id))
-  .single()
+
+const numericId = Number(id)
+if(!numericId) return
+
+const { data,error } = await supabaseClient
+.from(table)
+.select("*")
+.eq("id", numericId)
+.single()
+
+if(error || !data) return
 
 modalTitle.innerText="Editar"
 modalContent.innerHTML=""
 
 Object.keys(data).forEach(key=>{
 if(key!=="id"){
-modalContent.innerHTML+=`<input id="edit_${key}" value="${data[key]}">`
+modalContent.innerHTML+=`<input id="edit_${key}" value="${data[key] || ""}">`
 }
 })
 
@@ -262,40 +275,26 @@ if(key!=="id"){
 update[key]=document.getElementById("edit_"+key).value
 }
 })
-await supabaseClient.from(table).update(update).eq("id", Number(id))
+await supabaseClient.from(table).update(update).eq("id", numericId)
 modal.style.display="none"
 this.loadAll()
 }
 },
 
-openDelete(table, id) {
+openDelete(table,id){
 
-  const numericId = Number(id)
+const numericId = Number(id)
+if(!numericId) return
 
-  if (!numericId) {
-    alert("ID inválido")
-    return
-  }
+modalTitle.innerText="Confirmar Exclusão"
+modalContent.innerHTML="<p>Deseja realmente excluir?</p>"
+modal.style.display="flex"
 
-  modalTitle.innerText = "Confirmar Exclusão"
-  modalContent.innerHTML = "<p>Deseja realmente excluir?</p>"
-  modal.style.display = "flex"
-
-  currentAction = async () => {
-
-    const { error } = await supabaseClient
-      .from(table)
-      .delete()
-      .eq("id", numericId)
-
-    if (error) {
-      alert(error.message)
-      return
-    }
-
-    modal.style.display = "none"
-    this.loadAll()
-  }
+currentAction=async ()=>{
+await supabaseClient.from(table).delete().eq("id", numericId)
+modal.style.display="none"
+this.loadAll()
+}
 },
 
 bindTabs(){
@@ -316,7 +315,3 @@ App.init()
 </script>
 </body>
 </html>
-
-
-
-
