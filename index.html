@@ -240,7 +240,7 @@ this.openDelete(table,id)
 async openEdit(table,id){
 const { data } = await supabaseClient
   .from(table)
-  .select("*")
+  .select("id,setor,numero")
   .eq("id", Number(id))
   .single()
 
@@ -316,6 +316,7 @@ App.init()
 </script>
 </body>
 </html>
+
 
 
 
