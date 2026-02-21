@@ -180,10 +180,14 @@ function showLogin() {
   appContainer.style.display = "none"
 }
 
-// executa verificação ao carregar
-checkSession()
-  
 const App = {
+   async init() {
+   ...
+   }
+}
+
+// 🔥 AGORA SIM
+checkSession()
 
 async init(){
 this.bindTabs()
@@ -423,6 +427,7 @@ document.getElementById(btn.dataset.tab).classList.add("active")
 </script>
 </body>
 </html>
+
 
 
 
