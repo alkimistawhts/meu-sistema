@@ -182,7 +182,10 @@ function showLogin() {
 
 const App = {
    async init() {
-   ...
+   this.bindTabs()
+   this.bindAdd()
+   this.bindDelegation()
+   await this.loadAll()
    }
 }
 
@@ -427,6 +430,7 @@ document.getElementById(btn.dataset.tab).classList.add("active")
 </script>
 </body>
 </html>
+
 
 
 
