@@ -244,7 +244,7 @@ async insert(table,data){
   if(error){
     alert(error.message)
   } else {
-    this.loadAll()
+    await this.loadAll()
     document.querySelectorAll("input, textarea").forEach(el => el.value = "")
   }
 },
@@ -421,6 +421,7 @@ checkSession()
 </script>
 </body>
 </html>
+
 
 
 
