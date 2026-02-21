@@ -238,7 +238,11 @@ this.openDelete(table,id)
 },
 
 async openEdit(table,id){
-const { data } = await supabaseClient.from(table).select("*").eq("id",id).single()
+const { data } = await supabaseClient
+  .from(table)
+  .select("*")
+  .eq("id", Number(id))
+  .single()
 
 modalTitle.innerText="Editar"
 modalContent.innerHTML=""
@@ -258,7 +262,7 @@ if(key!=="id"){
 update[key]=document.getElementById("edit_"+key).value
 }
 })
-await supabaseClient.from(table).update(update).eq("id",id)
+await supabaseClient.from(table).update(update).eq("id", Number(id))
 modal.style.display="none"
 this.loadAll()
 }
@@ -313,4 +317,5 @@ App.init()
 </script>
 </body>
 </html>
+
 
