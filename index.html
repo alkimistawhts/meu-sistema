@@ -189,16 +189,6 @@ const App = {
    }
 },
 
-// 🔥 AGORA SIM
-checkSession()
-
-async init(){
-this.bindTabs()
-this.bindAdd()
-this.bindDelegation()
-await this.loadAll()
-},
-
 async loadAll(){
   await this.load("ramais","ramalList",(data)=>this.renderRamais(data))
   await this.load("mensagens","messageList",(data)=>this.renderMessages(data))
@@ -427,9 +417,12 @@ document.getElementById(btn.dataset.tab).classList.add("active")
 
 }
 
+checkSession()
+  
 </script>
 </body>
 </html>
+
 
 
 
