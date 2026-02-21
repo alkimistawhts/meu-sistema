@@ -231,11 +231,25 @@ bindAdd(){
 },
 
 async insert(table,data){
-  const { error } = await supabaseClient.from(table).insert(data)
+
+  const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+
+  if(userError || !user){
+    alert("Usuário não autenticado")
+    return
+  }
+
+  // adiciona user_id automaticamente
+  data.user_id = user.id
+
+  const { error } = await supabaseClient
+    .from(table)
+    .insert(data)
+
   if(error){
     alert(error.message)
   } else {
-    this.loadAll()
+    await this.loadAll()
     document.querySelectorAll("input, textarea").forEach(el => el.value = "")
   }
 },
@@ -409,6 +423,7 @@ App.init()
 </script>
 </body>
 </html>
+
 
 
 
