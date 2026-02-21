@@ -185,16 +185,20 @@ bindAdd(){
 },
 
 async insert(table,data){
-const { error } = await supabaseClient.from(table).insert(data)
-if(error) alert(error.message)
-else this.loadAll()
+  const { error } = await supabaseClient.from(table).insert(data)
+  if(error){
+    alert(error.message)
+  } else {
+    this.loadAll()
+    document.querySelectorAll("input, textarea").forEach(el => el.value = "")
+  }
 },
 
 renderRamais(data){
-ramalList.innerHTML=""
+document.getElementById("ramalList").innerHTML=""
 data.forEach(i=>{
 if(!i.id) return
-ramalList.innerHTML+=`
+document.getElementById("ramalList").innerHTML += ...
 <div class="card">
 <strong>${i.setor}</strong> - ${i.numero}
 <div class="actions">
@@ -206,10 +210,10 @@ ramalList.innerHTML+=`
 },
 
 renderMessages(data){
-messageList.innerHTML=""
+document.getElementById("messageList").innerHTML=""
 data.forEach(i=>{
 if(!i.id) return
-messageList.innerHTML+=`
+document.getElementById("messageList").innerHTML += ...
 <div class="card">
 ${i.texto}
 <div class="actions">
@@ -221,10 +225,10 @@ ${i.texto}
 },
 
 renderProducts(data){
-productList.innerHTML=""
+document.getElementById("productList").innerHTML=""
 data.forEach(i=>{
 if(!i.id) return
-productList.innerHTML+=`
+document.getElementById("productList").innerHTML += ...
 <div class="card">
 <strong>${i.name}</strong>
 <div>${i.actives}</div>
@@ -238,10 +242,10 @@ productList.innerHTML+=`
 },
 
 renderActives(data){
-activeList.innerHTML=""
+document.getElementById("activeList").innerHTML=""
 data.forEach(i=>{
 if(!i.id) return
-activeList.innerHTML+=`
+document.getElementById("activeList").innerHTML += ...
 <div class="card">
 <strong>${i.name}</strong>
 <div>${i.description}</div>
@@ -343,4 +347,5 @@ App.init()
 </script>
 </body>
 </html>
+
 
